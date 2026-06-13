@@ -1,380 +1,52 @@
-
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>漢字クイズ</title>
-
+<html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>漢字クイズ105問版</title>
 <style>
-body{
-    font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-    background:#f5f5f5;
-    margin:0;
-    padding:20px;
-    text-align:center;
-}
-
-.card{
-    max-width:800px;
-    margin:auto;
-    background:white;
-    padding:20px;
-    border-radius:16px;
-    box-shadow:0 2px 10px rgba(0,0,0,.1);
-}
-
-h1{
-    margin-top:0;
-}
-
-#question{
-    font-size:32px;
-    font-weight:bold;
-    margin:25px 0;
-}
-
-#answer{
-    display:none;
-    font-size:36px;
-    color:#1565c0;
-    margin:20px 0;
-}
-
-button{
-    font-size:18px;
-    padding:12px 18px;
-    border:none;
-    border-radius:10px;
-    margin:5px;
-    cursor:pointer;
-}
-
-.primary{
-    background:#1976d2;
-    color:white;
-}
-
-.good{
-    background:#2e7d32;
-    color:white;
-}
-
-.bad{
-    background:#c62828;
-    color:white;
-}
-
-.gray{
-    background:#666;
-    color:white;
-}
-
-#canvas{
-    width:100%;
-    max-width:700px;
-    height:320px;
-    border:3px solid #333;
-    background:#fff;
-    display:block;
-    margin:20px auto;
-    touch-action:none;
-    border-radius:8px;
-}
-
-#stats{
-    margin-top:20px;
-    font-size:18px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="card">
-
-<h1>漢字クイズ</h1>
-
-<div>
+body{font-family:-apple-system,sans-serif;background:#f5f5f5;margin:0;padding:20px;text-align:center}
+.card{max-width:800px;margin:auto;background:#fff;padding:20px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+#question{font-size:32px;font-weight:bold;margin:25px 0}
+#answer{display:none;font-size:36px;color:#1565c0;margin:20px 0}
+button{font-size:18px;padding:12px 18px;border:none;border-radius:10px;margin:5px}
+.primary{background:#1976d2;color:#fff} .good{background:#2e7d32;color:#fff} .bad{background:#c62828;color:#fff} .gray{background:#666;color:#fff}
+#canvas{width:100%;max-width:700px;height:320px;border:3px solid #333;background:#fff;display:block;margin:20px auto;touch-action:none}
+</style></head><body><div class="card">
+<h1>漢字クイズ（105問）</h1>
 <button class="primary" onclick="setMode('normal')">通常モード</button>
 <button class="gray" onclick="setMode('weak')">苦手モード</button>
-</div>
-
 <p id="modeLabel">通常モード</p>
-
 <div id="question"></div>
-
 <canvas id="canvas"></canvas>
-
-<div>
 <button onclick="clearCanvas()">消す</button>
 <button class="primary" onclick="showAnswer()">答えを見る</button>
-</div>
-
 <div id="answer"></div>
-
 <div id="judgeButtons" style="display:none;">
 <button class="good" onclick="markCorrect()">○ 正解</button>
 <button class="bad" onclick="markWrong()">× 不正解</button>
 </div>
-
-<div style="margin-top:15px;">
 <button class="primary" onclick="nextQuestion()">次の問題</button>
-</div>
-
 <div id="stats"></div>
-
 </div>
-
 <script>
-
-const questions = [
-{
-question:"明るいたいど",
-answer:"態度"
-},
-{
-question:"物語のこうせい",
-answer:"構成"
-},
-{
-question:"息をころす",
-answer:"殺す"
-},
-{
-question:"作業をまかせる",
-answer:"任せる"
-},
-{
-question:"職場のどうりょう",
-answer:"同僚"
-}
-];
-
-const STORAGE_KEY = "kanji_quiz_stats";
-
-let stats =
-JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-
-let current = null;
-let mode = "normal";
-
-function saveStats(){
-localStorage.setItem(
-STORAGE_KEY,
-JSON.stringify(stats)
-);
-}
-
-function setMode(newMode){
-
-mode = newMode;
-
-document.getElementById("modeLabel").textContent =
-mode === "normal"
-? "通常モード"
-: "苦手モード";
-
+const questions=[{"question": "[ようちゅう]のだっ皮", "answer": "幼虫"}, {"question": "周囲から[けいえん]される", "answer": "敬遠"}, {"question": "[まど]ぎわの席", "answer": "窓"}, {"question": "祖父母を[うやまう]", "answer": "敬う"}, {"question": "大声で[よび]かける", "answer": "呼び"}, {"question": "[きょうい]を測る", "answer": "胸囲"}, {"question": "[すがた]を見失う", "answer": "姿"}, {"question": "[おさない]弟", "answer": "幼い"}, {"question": "空気を[すい]こむ", "answer": "吸い"}, {"question": "目を[とじる]", "answer": "閉じる"}, {"question": "[いちまい]の花びら", "answer": "一枚"}, {"question": "答えへの[みちすじ]", "answer": "道筋"}, {"question": "目標を[せんげん]する", "answer": "宣言"}, {"question": "目が[いたい]", "answer": "痛い"}, {"question": "かさを[わすれる]", "answer": "忘れる"}, {"question": "物語を[ろうどく]する", "answer": "朗読"}, {"question": "横に[ならぶ]", "answer": "並ぶ"}, {"question": "[てき]から守る", "answer": "敵"}, {"question": "[へんかく]が行われる", "answer": "変革"}, {"question": "[むね]がいっぱいになる", "answer": "胸"}, {"question": "校庭の[うら]", "answer": "裏"}, {"question": "風でとびらが[しまる]", "answer": "閉まる"}, {"question": "昇[こうぐち]で話す", "answer": "降口"}, {"question": "[かんたん]な問い", "answer": "簡単"}, {"question": "[しかい]がせまい", "answer": "視界"}, {"question": "赤い[ゆうびん]ポスト", "answer": "郵便"}, {"question": "日の出を[おがむ]", "answer": "拝む"}, {"question": "[こめだわら]をかつぐ", "answer": "米俵"}, {"question": "[どひょう]に上がる", "answer": "土俵"}, {"question": "[こうほ]の中から選ぶ", "answer": "候補"}, {"question": "水面にかげが[うつる]", "answer": "映る"}, {"question": "資料を[てんじ]する", "answer": "展示"}, {"question": "[べにばな]をつむ", "answer": "紅花"}, {"question": "[しゅくしゃく]を測る", "answer": "縮尺"}, {"question": "服が[ちぢむ]", "answer": "縮む"}, {"question": "[はん]で団結する", "answer": "班"}, {"question": "写真や[えいぞう]を見る", "answer": "映像"}, {"question": "会長に[しゅうにん]する", "answer": "就任"}, {"question": "[きょうど]の歴史を学ぶ", "answer": "郷土"}, {"question": "[ちいき]に関する本", "answer": "地域"}, {"question": "物語を[そうさく]する", "answer": "創作"}, {"question": "[こうちゃ]の香り", "answer": "紅茶"}, {"question": "医は[じんじゅつ]という", "answer": "仁術"}, {"question": "道具を[はいしゃく]する", "answer": "拝借"}, {"question": "画家の[てんらんかい]", "answer": "展覧会"}, {"question": "[うちゅう]飛行士を目指す", "answer": "宇宙"}, {"question": "[よい]行いを心がける", "answer": "善い"}, {"question": "[いこく]を旅する", "answer": "異国"}, {"question": "[じゅくご]を調べる", "answer": "熟語"}, {"question": "[ないよう]を整理する", "answer": "内容"}, {"question": "[りんじ]の列しゃ", "answer": "臨時"}, {"question": "[ようさんぎょう]を営む", "answer": "養蚕業"}, {"question": "こく連の[かめいこく]", "answer": "加盟国"}, {"question": "[でんしゃちん]を計算する", "answer": "電車賃"}, {"question": "[ひじょうしき]なふるまい", "answer": "非常識"}, {"question": "[かいこ]を育てる", "answer": "蚕"}, {"question": "[きょうみ]のある出来事", "answer": "興味"}, {"question": "[しつもん]に答える", "answer": "質問"}, {"question": "広い[こくそう]地帯", "answer": "穀倉"}, {"question": "[けいさつしょ]で働く", "answer": "警察署"}, {"question": "たくさんの[じょうほう]", "answer": "情報"}, {"question": "[いよくてき]な人", "answer": "意欲的"}, {"question": "考えたかが[こと]なる", "answer": "異"}, {"question": "テレビの[えいぞう]", "answer": "映像"}, {"question": "[ぜんあく]を考える", "answer": "善悪"}, {"question": "[せいたいけい]をみだす", "answer": "生態系"}, {"question": "太いきが[そんざい]する", "answer": "存在"}, {"question": "[くらし]に必要なもの", "answer": "暮らし"}, {"question": "[だんらく]ごとに分ける", "answer": "段落"}, {"question": "森林の[おん]恵", "answer": "恩"}, {"question": "材もくの[きょうきゅう]", "answer": "供給"}, {"question": "[げんじゅう]に戸じまりをする", "answer": "厳重"}, {"question": "[きびしい]運命", "answer": "厳しい"}, {"question": "無じん[ぞう]なエネルギー", "answer": "蔵"}, {"question": "お墓に水を[そなえる]", "answer": "供える"}, {"question": "[い]跡を調査する", "answer": "遺"}, {"question": "[けつろん]をまとめる", "answer": "結論"}, {"question": "人口を[すいてい]する", "answer": "推定"}, {"question": "足を[ふしょう]する", "answer": "負傷"}, {"question": "[しゅうきょうてき]な目的", "answer": "宗教的"}, {"question": "彫[こく]をほどこす", "answer": "刻"}, {"question": "家具を[きず]つける", "answer": "傷"}, {"question": "小さなほ[にゅうどうぶつ]", "answer": "乳動物"}, {"question": "[じゅもく]の花粉が散る", "answer": "樹木"}, {"question": "方法を[あやまる]", "answer": "誤る"}, {"question": "[うんせい]がよい", "answer": "運勢"}, {"question": "[ゆくすえ]を案じる", "answer": "行く末"}, {"question": "[い]が痛い", "answer": "胃"}, {"question": "夜の外出は[あぶない]", "answer": "危ない"}, {"question": "[けらい]をしたがえる", "answer": "家来"}, {"question": "[まど]ガラスがわれる", "answer": "窓"}, {"question": "地しん[たいさく]を取る", "answer": "対策"}, {"question": "[しふく]を買う", "answer": "私服"}, {"question": "[こがい]で遊ぶ", "answer": "戸外"}, {"question": "くもり[のち]晴れ", "answer": "後"}, {"question": "[しんぞう]が動く", "answer": "心臓"}, {"question": "[わたくしごと]で断る", "answer": "私事"}, {"question": "犬が[した]を出す", "answer": "舌"}, {"question": "[きき]意識が低い", "answer": "危機"}, {"question": "食ごの[ちょう]の働き", "answer": "腸"}, {"question": "[のう]を活性化する", "answer": "脳"}, {"question": "[はい]で呼吸する", "answer": "肺"}, {"question": "[げんいん]と結果", "answer": "原因"}, {"question": "テレビの[ほうえい]される", "answer": "放映"}, {"question": "[わたし]たちの身の回り", "answer": "私事"}];
+const STORAGE_KEY="kanji_quiz_stats";
+let stats=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");
+let current=null,mode="normal";
+function saveStats(){localStorage.setItem(STORAGE_KEY,JSON.stringify(stats));}
+function setMode(m){mode=m;document.getElementById('modeLabel').textContent=m==='normal'?'通常モード':'苦手モード';nextQuestion();}
+function getPool(){if(mode==='normal')return questions;const w=questions.filter(q=>(stats[q.question]?.wrong||0)>0);return w.length?w:questions;}
+function nextQuestion(){const p=getPool();current=p[Math.floor(Math.random()*p.length)];question.textContent=current.question;answer.style.display='none';judgeButtons.style.display='none';clearCanvas();updateStats();}
+function showAnswer(){answer.textContent=current.answer;answer.style.display='block';judgeButtons.style.display='block';}
+function markCorrect(){stats[current.question]??={correct:0,wrong:0};stats[current.question].correct++;saveStats();nextQuestion();}
+function markWrong(){stats[current.question]??={correct:0,wrong:0};stats[current.question].wrong++;saveStats();nextQuestion();}
+function updateStats(){statsDiv=document.getElementById('stats');statsDiv.textContent='苦手登録数：'+Object.keys(stats).filter(k=>stats[k].wrong>0).length+'問 / 全105問';}
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+function resizeCanvas(){const r=canvas.getBoundingClientRect();canvas.width=r.width;canvas.height=r.height;ctx.lineWidth=5;ctx.lineCap='round';}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+let drawing=false;
+function pos(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+canvas.addEventListener('pointerdown',e=>{drawing=true;let p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+canvas.addEventListener('pointermove',e=>{if(!drawing)return;let p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();});
+['pointerup','pointerleave','pointercancel'].forEach(v=>canvas.addEventListener(v,()=>drawing=false));
+function clearCanvas(){ctx.clearRect(0,0,canvas.width,canvas.height);}
 nextQuestion();
-}
-
-function getPool(){
-
-if(mode === "normal"){
-return questions;
-}
-
-const weakQuestions =
-questions.filter(q => {
-
-const wrong =
-stats[q.question]?.wrong || 0;
-
-return wrong > 0;
-});
-
-return weakQuestions.length
-? weakQuestions
-: questions;
-}
-
-function nextQuestion(){
-
-const pool = getPool();
-
-current =
-pool[Math.floor(Math.random() * pool.length)];
-
-document.getElementById("question").textContent =
-current.question;
-
-document.getElementById("answer").style.display =
-"none";
-
-document.getElementById("judgeButtons").style.display =
-"none";
-
-clearCanvas();
-
-updateStats();
-}
-
-function showAnswer(){
-
-document.getElementById("answer").textContent =
-current.answer;
-
-document.getElementById("answer").style.display =
-"block";
-
-document.getElementById("judgeButtons").style.display =
-"block";
-}
-
-function markCorrect(){
-
-if(!stats[current.question]){
-stats[current.question] =
-{correct:0, wrong:0};
-}
-
-stats[current.question].correct++;
-
-saveStats();
-
-nextQuestion();
-}
-
-function markWrong(){
-
-if(!stats[current.question]){
-stats[current.question] =
-{correct:0, wrong:0};
-}
-
-stats[current.question].wrong++;
-
-saveStats();
-
-nextQuestion();
-}
-
-function updateStats(){
-
-const weakCount =
-Object.keys(stats)
-.filter(k => stats[k].wrong > 0)
-.length;
-
-document.getElementById("stats").innerHTML =
-"苦手登録数：" + weakCount + "問";
-}
-
-const canvas =
-document.getElementById("canvas");
-
-const ctx =
-canvas.getContext("2d");
-
-function resizeCanvas(){
-
-const rect =
-canvas.getBoundingClientRect();
-
-canvas.width =
-rect.width;
-
-canvas.height =
-rect.height;
-
-ctx.lineWidth = 5;
-ctx.lineCap = "round";
-ctx.lineJoin = "round";
-}
-
-resizeCanvas();
-
-window.addEventListener(
-"resize",
-resizeCanvas
-);
-
-let drawing = false;
-
-function getPos(e){
-
-const rect =
-canvas.getBoundingClientRect();
-
-return {
-x:e.clientX - rect.left,
-y:e.clientY - rect.top
-};
-}
-
-canvas.addEventListener(
-"pointerdown",
-(e)=>{
-
-drawing = true;
-
-const pos = getPos(e);
-
-ctx.beginPath();
-ctx.moveTo(pos.x,pos.y);
-
-e.preventDefault();
-}
-);
-
-canvas.addEventListener(
-"pointermove",
-(e)=>{
-
-if(!drawing) return;
-
-const pos = getPos(e);
-
-ctx.lineTo(pos.x,pos.y);
-ctx.stroke();
-
-e.preventDefault();
-}
-);
-
-function stopDrawing(){
-drawing = false;
-}
-
-canvas.addEventListener(
-"pointerup",
-stopDrawing
-);
-
-canvas.addEventListener(
-"pointerleave",
-stopDrawing
-);
-
-canvas.addEventListener(
-"pointercancel",
-stopDrawing
-);
-
-function clearCanvas(){
-
-ctx.clearRect(
-0,
-0,
-canvas.width,
-canvas.height
-);
-}
-
-nextQuestion();
-
-</script>
-
-</body>
-</html>
-
+</script></body></html>
