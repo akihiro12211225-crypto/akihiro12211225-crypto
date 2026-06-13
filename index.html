@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -7,75 +8,78 @@
 
 <style>
 body{
-    font-family:-apple-system,sans-serif;
-    text-align:center;
+    font-family:-apple-system,BlinkMacSystemFont,sans-serif;
     background:#f5f5f5;
     margin:0;
     padding:20px;
-}
-
-h1{
-    color:#333;
+    text-align:center;
 }
 
 .card{
-    background:white;
-    border-radius:15px;
-    padding:20px;
-    max-width:700px;
+    max-width:800px;
     margin:auto;
-    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    background:white;
+    padding:20px;
+    border-radius:16px;
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+}
+
+h1{
+    margin-top:0;
 }
 
 #question{
-    font-size:28px;
+    font-size:32px;
     font-weight:bold;
-    margin:20px 0;
+    margin:25px 0;
 }
 
 #answer{
-    font-size:32px;
-    color:#1976d2;
-    margin:20px;
     display:none;
-}
-
-canvas{
-    border:3px solid #333;
-    background:white;
-    touch-action:none;
-    width:100%;
-    max-width:600px;
-    height:300px;
+    font-size:36px;
+    color:#1565c0;
+    margin:20px 0;
 }
 
 button{
     font-size:18px;
     padding:12px 18px;
-    margin:6px;
     border:none;
     border-radius:10px;
+    margin:5px;
     cursor:pointer;
 }
 
 .primary{
-    background:#2196f3;
+    background:#1976d2;
     color:white;
 }
 
 .good{
-    background:#4caf50;
+    background:#2e7d32;
     color:white;
 }
 
 .bad{
-    background:#f44336;
+    background:#c62828;
     color:white;
 }
 
-.secondary{
+.gray{
     background:#666;
     color:white;
+}
+
+#canvas{
+    width:100%;
+    max-width:700px;
+    height:320px;
+    border:3px solid #333;
+    background:#fff;
+    display:block;
+    margin:20px auto;
+    touch-action:none;
+    border-radius:8px;
 }
 
 #stats{
@@ -87,20 +91,20 @@ button{
 
 <body>
 
-<h1>漢字クイズ</h1>
-
 <div class="card">
+
+<h1>漢字クイズ</h1>
 
 <div>
 <button class="primary" onclick="setMode('normal')">通常モード</button>
-<button class="secondary" onclick="setMode('weak')">苦手モード</button>
+<button class="gray" onclick="setMode('weak')">苦手モード</button>
 </div>
 
-<div id="modeLabel">通常モード</div>
+<p id="modeLabel">通常モード</p>
 
 <div id="question"></div>
 
-<canvas id="canvas" width="600" height="300"></canvas>
+<canvas id="canvas"></canvas>
 
 <div>
 <button onclick="clearCanvas()">消す</button>
@@ -114,7 +118,7 @@ button{
 <button class="bad" onclick="markWrong()">× 不正解</button>
 </div>
 
-<div>
+<div style="margin-top:15px;">
 <button class="primary" onclick="nextQuestion()">次の問題</button>
 </div>
 
@@ -147,69 +151,95 @@ answer:"同僚"
 }
 ];
 
+const STORAGE_KEY = "kanji_quiz_stats";
+
+let stats =
+JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
 let current = null;
 let mode = "normal";
 
-const STORAGE_KEY = "kanji_stats";
-
-let stats = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-
 function saveStats(){
-localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+localStorage.setItem(
+STORAGE_KEY,
+JSON.stringify(stats)
+);
 }
 
-function setMode(m){
-mode = m;
-document.getElementById("modeLabel").innerText =
-m==="normal" ? "通常モード" : "苦手モード";
+function setMode(newMode){
+
+mode = newMode;
+
+document.getElementById("modeLabel").textContent =
+mode === "normal"
+? "通常モード"
+: "苦手モード";
+
 nextQuestion();
 }
 
-function getQuestionPool(){
+function getPool(){
 
-if(mode==="normal"){
+if(mode === "normal"){
 return questions;
 }
 
-const weak = questions.filter(q=>{
-const wrong = stats[q.question]?.wrong || 0;
+const weakQuestions =
+questions.filter(q => {
+
+const wrong =
+stats[q.question]?.wrong || 0;
+
 return wrong > 0;
 });
 
-return weak.length ? weak : questions;
+return weakQuestions.length
+? weakQuestions
+: questions;
 }
 
 function nextQuestion(){
 
-const pool = getQuestionPool();
+const pool = getPool();
 
-current = pool[Math.floor(Math.random()*pool.length)];
+current =
+pool[Math.floor(Math.random() * pool.length)];
 
-document.getElementById("question").innerText =
+document.getElementById("question").textContent =
 current.question;
 
-document.getElementById("answer").style.display="none";
-document.getElementById("judgeButtons").style.display="none";
+document.getElementById("answer").style.display =
+"none";
+
+document.getElementById("judgeButtons").style.display =
+"none";
 
 clearCanvas();
+
 updateStats();
 }
 
 function showAnswer(){
-document.getElementById("answer").innerText =
+
+document.getElementById("answer").textContent =
 current.answer;
 
-document.getElementById("answer").style.display="block";
-document.getElementById("judgeButtons").style.display="block";
+document.getElementById("answer").style.display =
+"block";
+
+document.getElementById("judgeButtons").style.display =
+"block";
 }
 
 function markCorrect(){
 
 if(!stats[current.question]){
-stats[current.question] = {correct:0, wrong:0};
+stats[current.question] =
+{correct:0, wrong:0};
 }
 
 stats[current.question].correct++;
+
 saveStats();
 
 nextQuestion();
@@ -218,10 +248,12 @@ nextQuestion();
 function markWrong(){
 
 if(!stats[current.question]){
-stats[current.question] = {correct:0, wrong:0};
+stats[current.question] =
+{correct:0, wrong:0};
 }
 
 stats[current.question].wrong++;
+
 saveStats();
 
 nextQuestion();
@@ -229,38 +261,50 @@ nextQuestion();
 
 function updateStats(){
 
-let totalWrong = 0;
-
-for(const k in stats){
-totalWrong += stats[k].wrong;
-}
+const weakCount =
+Object.keys(stats)
+.filter(k => stats[k].wrong > 0)
+.length;
 
 document.getElementById("stats").innerHTML =
-`苦手登録数：${Object.keys(stats).filter(
-k => stats[k].wrong > 0
-).length}問`;
+"苦手登録数：" + weakCount + "問";
 }
 
-nextQuestion();
+const canvas =
+document.getElementById("canvas");
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const ctx =
+canvas.getContext("2d");
+
+function resizeCanvas(){
+
+const rect =
+canvas.getBoundingClientRect();
+
+canvas.width =
+rect.width;
+
+canvas.height =
+rect.height;
 
 ctx.lineWidth = 5;
 ctx.lineCap = "round";
+ctx.lineJoin = "round";
+}
+
+resizeCanvas();
+
+window.addEventListener(
+"resize",
+resizeCanvas
+);
 
 let drawing = false;
 
 function getPos(e){
 
-const rect = canvas.getBoundingClientRect();
-
-if(e.touches){
-return {
-x:e.touches[0].clientX - rect.left,
-y:e.touches[0].clientY - rect.top
-};
-}
+const rect =
+canvas.getBoundingClientRect();
 
 return {
 x:e.clientX - rect.left,
@@ -268,42 +312,69 @@ y:e.clientY - rect.top
 };
 }
 
-function startDraw(e){
+canvas.addEventListener(
+"pointerdown",
+(e)=>{
+
 drawing = true;
+
 const pos = getPos(e);
+
 ctx.beginPath();
 ctx.moveTo(pos.x,pos.y);
-}
-
-function draw(e){
-
-if(!drawing) return;
 
 e.preventDefault();
+}
+);
+
+canvas.addEventListener(
+"pointermove",
+(e)=>{
+
+if(!drawing) return;
 
 const pos = getPos(e);
 
 ctx.lineTo(pos.x,pos.y);
 ctx.stroke();
-}
 
-function stopDraw(){
+e.preventDefault();
+}
+);
+
+function stopDrawing(){
 drawing = false;
 }
 
-canvas.addEventListener("mousedown",startDraw);
-canvas.addEventListener("mousemove",draw);
-canvas.addEventListener("mouseup",stopDraw);
+canvas.addEventListener(
+"pointerup",
+stopDrawing
+);
 
-canvas.addEventListener("touchstart",startDraw);
-canvas.addEventListener("touchmove",draw);
-canvas.addEventListener("touchend",stopDraw);
+canvas.addEventListener(
+"pointerleave",
+stopDrawing
+);
+
+canvas.addEventListener(
+"pointercancel",
+stopDrawing
+);
 
 function clearCanvas(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ctx.clearRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
 }
+
+nextQuestion();
 
 </script>
 
 </body>
 </html>
+
