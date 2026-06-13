@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>漢字クイズ</title>
+<style>
+body{font-family:-apple-system,sans-serif;background:#f5f5f5;margin:0;padding:20px;text-align:center}
+.card{max-width:800px;margin:auto;background:#fff;padding:20px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+#question{font-size:32px;font-weight:bold;margin:25px 0}#answer{display:none;font-size:36px;color:#1565c0;margin:20px 0}
+button{font-size:18px;padding:12px 18px;border:none;border-radius:10px;margin:5px}
+.primary{background:#1976d2;color:#fff} .good{background:#2e7d32;color:#fff} .bad{background:#c62828;color:#fff} .gray{background:#666;color:#fff}
+#canvas{width:100%;max-width:700px;height:320px;border:3px solid #333;background:#fff;display:block;margin:20px auto;touch-action:none}
+</style></head><body><div class="card">
+<h1>漢字クイズ（125問）</h1>
+<button class="primary" onclick="setMode('normal')">通常モード</button>
+<button class="gray" onclick="setMode('weak')">苦手モード</button>
+<p id="modeLabel">通常モード</p><div id="question"></div>
+<canvas id="canvas"></canvas>
+<button onclick="clearCanvas()">消す</button>
+<button class="primary" onclick="showAnswer()">答えを見る</button>
+<div id="answer"></div>
+<div id="judgeButtons" style="display:none;">
+<button class="good" onclick="markCorrect()">○ 正解</button>
+<button class="bad" onclick="markWrong()">× 不正解</button>
+</div>
+<button class="primary" onclick="nextQuestion()">次の問題</button>
+<div id="stats"></div></div>
+<script>
+const questions=[{"question": "すきなおんがく", "answer": "好きな音楽"}, {"question": "ひこうき", "answer": "飛行機"}, {"question": "はくぶつかん", "answer": "博物館"}, {"question": "しめいをはたす", "answer": "使命を果たす"}, {"question": "たいじゅうをはかる", "answer": "体重を量る"}, {"question": "きよいこころ", "answer": "清い心"}, {"question": "ゆうがいなもの", "answer": "有害なもの"}, {"question": "かんぜんにきえる", "answer": "完全に消える"}, {"question": "しょくじのせき", "answer": "食事の席"}, {"question": "ひにやける", "answer": "日に焼ける"}, {"question": "しょかいのほうそう", "answer": "初回の放送"}, {"question": "かぜをなおす", "answer": "かぜを治す"}, {"question": "さいしょのいっぽ", "answer": "最初の一歩"}, {"question": "こうぶつ", "answer": "好物"}, {"question": "ひととかかわる", "answer": "人と関わる"}, {"question": "ひもをむすぶ", "answer": "ひもを結ぶ"}, {"question": "つぎのきかい", "answer": "次の機会"}, {"question": "あついおふろ", "answer": "熱いおふろ"}, {"question": "たいりょうをよころぶ", "answer": "大漁をよろこぶ"}, {"question": "しゅざいする", "answer": "取材する"}, {"question": "えだをたばねる", "answer": "えだを束ねる"}, {"question": "ひゃくのくらいのすうじ", "answer": "百の位の数字"}, {"question": "けいばじょう", "answer": "競馬場"}, {"question": "きしゅのこうしん", "answer": "旗手の行進"}, {"question": "うんどうかいのきょうぎ", "answer": "運動会の競ぎ"}, {"question": "しゃっきんする", "answer": "借金する"}, {"question": "ばんぐみのろくが", "answer": "番組の録画"}, {"question": "てんねんのみず", "answer": "天然の水"}, {"question": "ぶんぽうのほん", "answer": "文法の本"}, {"question": "ともとわかれる", "answer": "友と別れる"}, {"question": "みずをくあわえる", "answer": "水を加える"}, {"question": "しかいのしんこう", "answer": "司会の進行"}, {"question": "こどものせいちょう", "answer": "子どもの成長"}, {"question": "れんぞくでかつ", "answer": "連続で勝つ"}, {"question": "いぬのくんれん", "answer": "犬の訓練"}, {"question": "はなだより", "answer": "花便り"}, {"question": "ちあんがいい", "answer": "治安がいい"}, {"question": "たいけんする", "answer": "体験する"}, {"question": "おかねのせいきゅう", "answer": "お金のせい求"}, {"question": "がくぎょうにつとめる", "answer": "学業に努める"}, {"question": "さかなのたぐい", "answer": "魚の類い"}, {"question": "たかいにゅうじょうりょう", "answer": "高い入場料"}, {"question": "おみやにまいる", "answer": "お宮に参る"}, {"question": "だいずのはつが", "answer": "大豆の発芽"}, {"question": "しきてんをおこなう", "answer": "式典を行う"}, {"question": "おしえをとく", "answer": "教えを説く"}, {"question": "じゅんちょうにすすむ", "answer": "順調に進む"}, {"question": "ひまわりのたね", "answer": "ひまわりの種"}, {"question": "ゆうりなばめん", "answer": "有利な場面"}, {"question": "むしのかんさつ", "answer": "虫の観察"}, {"question": "ざいりょうをかう", "answer": "材料を買う"}, {"question": "よやくする", "answer": "予約する"}, {"question": "せきがあく", "answer": "席が空く"}, {"question": "おおごえでわらう", "answer": "大声で笑う"}, {"question": "さかなをやく", "answer": "魚を焼く"}, {"question": "はじめてあうひと", "answer": "初めて会う人"}, {"question": "もっともたかいやま", "answer": "最も高い山"}, {"question": "くらをたてる", "answer": "倉をたてる"}, {"question": "かんじをおぼえる", "answer": "漢字を覚える"}, {"question": "きをうしなう", "answer": "気を失う"}, {"question": "れいをあげる", "answer": "例をあげる"}, {"question": "こうじをぞっこうする", "answer": "工事を続行する"}, {"question": "でんきをよむ", "answer": "伝記を読む"}, {"question": "かんせいしたさくひん", "answer": "完成した作品"}, {"question": "やくそくをまもる", "answer": "約束を守る"}, {"question": "いちいになる", "answer": "一位になる"}, {"question": "とくだいほーむらん", "answer": "特大ホームラン"}, {"question": "きょうそうする", "answer": "競争する"}, {"question": "がっこうのはた", "answer": "学校の旗"}, {"question": "しょっきをあらう", "answer": "食器をあらう"}, {"question": "すごもり", "answer": "巣ごもり"}, {"question": "ろうどうじかん", "answer": "ろう働時間"}, {"question": "あかいほうそうし", "answer": "赤い包そう紙"}, {"question": "あんないする", "answer": "案内する"}, {"question": "よていがかわる", "answer": "予定が変わる"}, {"question": "じしょをつかう", "answer": "辞書を使う"}, {"question": "かんじのなりたち", "answer": "漢字の成り立ち"}, {"question": "やまがつらなる", "answer": "山が連なる"}, {"question": "かんじのなりたちおんくん", "answer": "漢字の音訓"}, {"question": "べんりなどうぐ", "answer": "便利な道具"}, {"question": "びょうきをなおす", "answer": "病気を治す"}, {"question": "りかのじっけん", "answer": "理科の実験"}, {"question": "とびだす", "answer": "飛び出す"}, {"question": "かなだのはかせ", "answer": "カナダの博士"}, {"question": "じっけんのけっか", "answer": "実験の結果"}, {"question": "みずのりょう", "answer": "水の量"}, {"question": "さくぶんのせいしょ", "answer": "作文の清書"}, {"question": "がいちゅうをくじょうる", "answer": "害虫をくじょする"}, {"question": "かんじじてん", "answer": "漢字辞典"}, {"question": "せつめいをきく", "answer": "説明を聞く"}, {"question": "かんじのひつじゅん", "answer": "漢字の筆順"}, {"question": "むしのしゅるい", "answer": "虫の種類"}, {"question": "くるまをりようする", "answer": "車を利用する"}, {"question": "かんきゃくがおおい", "answer": "観客が多い"}, {"question": "このみのいろ", "answer": "好みの色"}, {"question": "よいかんけい", "answer": "よい関係"}, {"question": "けっきょくやめた", "answer": "結局やめた"}, {"question": "ひこうき", "answer": "飛行機"}, {"question": "ねっとうをわかす", "answer": "熱湯をわかす"}, {"question": "ぎょせん", "answer": "漁船"}, {"question": "がっきのれんしゅう", "answer": "楽器の練習"}, {"question": "とりのす", "answer": "鳥の巣"}, {"question": "そとではたらく", "answer": "外で働く"}, {"question": "かみでつつむ", "answer": "紙で包む"}, {"question": "めいあんがある", "answer": "名案がある"}, {"question": "きおんのへんか", "answer": "気温の変化"}, {"question": "ちからをかりる", "answer": "力を借りる"}, {"question": "かんさつのきろく", "answer": "観察の記録"}, {"question": "しぜんにきえる", "answer": "自然に消える"}, {"question": "あたらしいほうほう", "answer": "新しい方法"}, {"question": "べつのみせにはいる", "answer": "別の店に入る"}, {"question": "ぜんいんのさんか", "answer": "全員の参加"}, {"question": "ししょのしごと", "answer": "司書の仕事"}, {"question": "そうこのまど", "answer": "倉庫のまど"}, {"question": "めをさます", "answer": "目を覚ます"}, {"question": "しつれいなひと", "answer": "失礼な人"}, {"question": "たとえばのはなし", "answer": "例えばの話"}, {"question": "はなしをつづける", "answer": "話を続ける"}, {"question": "ようすがつたわる", "answer": "様子が伝わる"}, {"question": "しごとをもとめる", "answer": "仕事を求める"}, {"question": "どりょくをする", "answer": "努力をする"}, {"question": "ごみのぶんるい", "answer": "ごみの分類"}, {"question": "しりょうをあつめる", "answer": "し料を集める"}, {"question": "しきにさんれつする", "answer": "式に参列する"}, {"question": "めをだす", "answer": "芽を出す"}];
+const STORAGE_KEY="kanji_quiz_stats";
+let stats=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");
+let current=null,mode="normal";
+function saveStats(){localStorage.setItem(STORAGE_KEY,JSON.stringify(stats));}
+function setMode(m){mode=m;modeLabel.textContent=m==='normal'?'通常モード':'苦手モード';nextQuestion();}
+function getPool(){if(mode==='normal')return questions;const w=questions.filter(q=>(stats[q.question]?.wrong||0)>0);return w.length?w:questions;}
+function nextQuestion(){const p=getPool();current=p[Math.floor(Math.random()*p.length)];question.textContent=current.question;answer.style.display='none';judgeButtons.style.display='none';clearCanvas();updateStats();}
+function showAnswer(){answer.textContent=current.answer;answer.style.display='block';judgeButtons.style.display='block';}
+function markCorrect(){stats[current.question]??={correct:0,wrong:0};stats[current.question].correct++;saveStats();nextQuestion();}
+function markWrong(){stats[current.question]??={correct:0,wrong:0};stats[current.question].wrong++;saveStats();nextQuestion();}
+function updateStats(){document.getElementById('stats').textContent='苦手登録数：'+Object.keys(stats).filter(k=>stats[k].wrong>0).length+'問 / 全125問';}
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+function resizeCanvas(){const r=canvas.getBoundingClientRect();canvas.width=r.width;canvas.height=r.height;ctx.lineWidth=5;ctx.lineCap='round';}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+let drawing=false; function pos(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+canvas.addEventListener('pointerdown',e=>{drawing=true;let p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+canvas.addEventListener('pointermove',e=>{if(!drawing)return;let p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();});
+['pointerup','pointerleave','pointercancel'].forEach(v=>canvas.addEventListener(v,()=>drawing=false));
+function clearCanvas(){ctx.clearRect(0,0,canvas.width,canvas.height);}
+nextQuestion();
+</script></body></html>
