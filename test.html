@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漢字クイズ</title>
+
+<style>
+body{
+    font-family:-apple-system,sans-serif;
+    text-align:center;
+    background:#f5f5f5;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    color:#333;
+}
+
+.card{
+    background:white;
+    border-radius:15px;
+    padding:20px;
+    max-width:700px;
+    margin:auto;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+#question{
+    font-size:28px;
+    font-weight:bold;
+    margin:20px 0;
+}
+
+#answer{
+    font-size:32px;
+    color:#1976d2;
+    margin:20px;
+    display:none;
+}
+
+canvas{
+    border:3px solid #333;
+    background:white;
+    touch-action:none;
+    width:100%;
+    max-width:600px;
+    height:300px;
+}
+
+button{
+    font-size:18px;
+    padding:12px 18px;
+    margin:6px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.primary{
+    background:#2196f3;
+    color:white;
+}
+
+.good{
+    background:#4caf50;
+    color:white;
+}
+
+.bad{
+    background:#f44336;
+    color:white;
+}
+
+.secondary{
+    background:#666;
+    color:white;
+}
+
+#stats{
+    margin-top:20px;
+    font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>漢字クイズ</h1>
+
+<div class="card">
+
+<div>
+<button class="primary" onclick="setMode('normal')">通常モード</button>
+<button class="secondary" onclick="setMode('weak')">苦手モード</button>
+</div>
+
+<div id="modeLabel">通常モード</div>
+
+<div id="question"></div>
+
+<canvas id="canvas" width="600" height="300"></canvas>
+
+<div>
+<button onclick="clearCanvas()">消す</button>
+<button class="primary" onclick="showAnswer()">答えを見る</button>
+</div>
+
+<div id="answer"></div>
+
+<div id="judgeButtons" style="display:none;">
+<button class="good" onclick="markCorrect()">○ 正解</button>
+<button class="bad" onclick="markWrong()">× 不正解</button>
+</div>
+
+<div>
+<button class="primary" onclick="nextQuestion()">次の問題</button>
+</div>
+
+<div id="stats"></div>
+
+</div>
+
+<script>
+
+const questions = [
+{
+question:"明るいたいど",
+answer:"態度"
+},
+{
+question:"物語のこうせい",
+answer:"構成"
+},
+{
+question:"息をころす",
+answer:"殺す"
+},
+{
+question:"作業をまかせる",
+answer:"任せる"
+},
+{
+question:"職場のどうりょう",
+answer:"同僚"
+}
+];
+
+let current = null;
+let mode = "normal";
+
+const STORAGE_KEY = "kanji_stats";
+
+let stats = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+function saveStats(){
+localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+}
+
+function setMode(m){
+mode = m;
+document.getElementById("modeLabel").innerText =
+m==="normal" ? "通常モード" : "苦手モード";
+nextQuestion();
+}
+
+function getQuestionPool(){
+
+if(mode==="normal"){
+return questions;
+}
+
+const weak = questions.filter(q=>{
+const wrong = stats[q.question]?.wrong || 0;
+return wrong > 0;
+});
+
+return weak.length ? weak : questions;
+}
+
+function nextQuestion(){
+
+const pool = getQuestionPool();
+
+current = pool[Math.floor(Math.random()*pool.length)];
+
+document.getElementById("question").innerText =
+current.question;
+
+document.getElementById("answer").style.display="none";
+document.getElementById("judgeButtons").style.display="none";
+
+clearCanvas();
+updateStats();
+}
+
+function showAnswer(){
+document.getElementById("answer").innerText =
+current.answer;
+
+document.getElementById("answer").style.display="block";
+document.getElementById("judgeButtons").style.display="block";
+}
+
+function markCorrect(){
+
+if(!stats[current.question]){
+stats[current.question] = {correct:0, wrong:0};
+}
+
+stats[current.question].correct++;
+saveStats();
+
+nextQuestion();
+}
+
+function markWrong(){
+
+if(!stats[current.question]){
+stats[current.question] = {correct:0, wrong:0};
+}
+
+stats[current.question].wrong++;
+saveStats();
+
+nextQuestion();
+}
+
+function updateStats(){
+
+let totalWrong = 0;
+
+for(const k in stats){
+totalWrong += stats[k].wrong;
+}
+
+document.getElementById("stats").innerHTML =
+`苦手登録数：${Object.keys(stats).filter(
+k => stats[k].wrong > 0
+).length}問`;
+}
+
+nextQuestion();
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+ctx.lineWidth = 5;
+ctx.lineCap = "round";
+
+let drawing = false;
+
+function getPos(e){
+
+const rect = canvas.getBoundingClientRect();
+
+if(e.touches){
+return {
+x:e.touches[0].clientX - rect.left,
+y:e.touches[0].clientY - rect.top
+};
+}
+
+return {
+x:e.clientX - rect.left,
+y:e.clientY - rect.top
+};
+}
+
+function startDraw(e){
+drawing = true;
+const pos = getPos(e);
+ctx.beginPath();
+ctx.moveTo(pos.x,pos.y);
+}
+
+function draw(e){
+
+if(!drawing) return;
+
+e.preventDefault();
+
+const pos = getPos(e);
+
+ctx.lineTo(pos.x,pos.y);
+ctx.stroke();
+}
+
+function stopDraw(){
+drawing = false;
+}
+
+canvas.addEventListener("mousedown",startDraw);
+canvas.addEventListener("mousemove",draw);
+canvas.addEventListener("mouseup",stopDraw);
+
+canvas.addEventListener("touchstart",startDraw);
+canvas.addEventListener("touchmove",draw);
+canvas.addEventListener("touchend",stopDraw);
+
+function clearCanvas(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+</script>
+
+</body>
+</html>
